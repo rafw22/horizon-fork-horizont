@@ -1790,15 +1790,13 @@ impl Title {
                         cx - 100.0,
                         y + 48.0,
                         200.0,
-                        &lang::get_or("menu.online", "Minecraft Realms"),
-                        // TitleScreen.createNormalMenuOptions: Realms is off when
-                        // multiplayer is.
-                        self.allows_multiplayer,
+                        "Horizont Mods & Add-ons",
+                        true,
                         8,
                     ),
                     b(
                         cx - 100.0,
-                        y + 96.0,
+                        y + 72.0,
                         98.0,
                         &lang::get_or("menu.options", "Options..."),
                         true,
@@ -1807,7 +1805,7 @@ impl Title {
                     .does(crate::widgets::Action::Options),
                     b(
                         cx + 2.0,
-                        y + 96.0,
+                        y + 72.0,
                         98.0,
                         &lang::get_or("menu.quit", "Quit Game"),
                         true,
@@ -1815,32 +1813,39 @@ impl Title {
                     )
                     .does(crate::widgets::Action::Exit),
                 ];
-                // CommonButtons' icon buttons; Horizon's Join a Friend (an
-                // invite code) sits behind vanilla's Friends button.
-                for (i, (key, plain, id, icon)) in [
-                    ("gui.friends.open", "Friends", 5, "friends/friends"),
-                    ("options.language", "Language...", 6, "icon/language"),
-                    (
-                        "options.accessibility",
-                        "Accessibility Settings...",
-                        7,
-                        "icon/accessibility",
-                    ),
-                ]
-                .into_iter()
-                .enumerate()
-                {
-                    let mut button = b(
-                        cx - 34.0 + i as f32 * 24.0,
-                        y + 72.0,
-                        20.0,
-                        &lang::get_or(key, plain),
-                        true,
-                        id,
-                    );
-                    button.icon = Some((icon, 15.0));
-                    buttons.push(button);
-                }
+                // Ergonomic icon placement on outer flanks (misclick prevention):
+                let mut friends_btn = b(
+                    cx + 104.0,
+                    y + 24.0,
+                    20.0,
+                    &lang::get_or("gui.friends.open", "Friends"),
+                    true,
+                    5,
+                );
+                friends_btn.icon = Some(("friends/friends", 15.0));
+                buttons.push(friends_btn);
+
+                let mut lang_btn = b(
+                    cx - 124.0,
+                    y + 72.0,
+                    20.0,
+                    &lang::get_or("options.language", "Language..."),
+                    true,
+                    6,
+                );
+                lang_btn.icon = Some(("icon/language", 15.0));
+                buttons.push(lang_btn);
+
+                let mut access_btn = b(
+                    cx + 104.0,
+                    y + 72.0,
+                    20.0,
+                    &lang::get_or("options.accessibility", "Accessibility Settings..."),
+                    true,
+                    7,
+                );
+                access_btn.icon = Some(("icon/accessibility", 15.0));
+                buttons.push(access_btn);
                 buttons
             }
             Mode::Select { worlds, selected } => {
@@ -3555,8 +3560,7 @@ Would you like to enable the Narrator or visit the Accessibility Settings?",
                 Action::None
             }
             (Mode::Main, Some(8)) => {
-                self.mode = Mode::Realms(crate::realms::Screen::new());
-                Action::None
+                Action::Options
             }
             (Mode::Realms(screen), hit) => match screen.click(hit, x, y, (w, h)) {
                 crate::realms::Outcome::Back => {
