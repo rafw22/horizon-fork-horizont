@@ -1,8 +1,7 @@
 # Horizont ⚡
 
-> **High-Performance Rust Minecraft Fork**  
-> Forked from [horizon-rust/horizon](https://github.com/horizon-rust/horizon) by **rafw22** & **RamixSU**.  
-> *Note on Contributors: This repository contains the full upstream git commit history of Horizon, which is why upstream authors appear in the contributors list. Horizont is an independent performance and power-user fork.*
+> **High-Performance Multi-Core Rust Minecraft Engine**  
+> Maintained by **rafw22**.
 
 ---
 
