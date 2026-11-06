@@ -373,7 +373,8 @@ fn tr(key: &str) -> Text {
 /// The Add button is square. The button sprite is a nine-slice built for a
 /// height of 20; drawn shorter, neither it nor its label sits right, so the
 /// button keeps that height and is centred on the shorter search box.
-const ADD_SIZE: i32 = 20;
+const ADD_W: i32 = 90;
+const ADD_H: i32 = 20;
 /// A card in the grid: its icon beside its name, author and description.
 const ROW_H: i32 = 74;
 /// The air around a card's contents.
@@ -439,7 +440,7 @@ impl PackScreen {
             lists: [List::new(false, height - 66), List::new(true, height - 66)],
             confirm: None,
             browser: None,
-            browsing_allowed: false,
+            browsing_allowed: true,
             backdrop: Backdrop::None,
             browser_icons: Vec::new(),
             browser_search: {
@@ -1056,7 +1057,7 @@ impl PackScreen {
             return Some(Action::None);
         }
         let (bx, by) = self.add_button(m);
-        if d::inside(point, bx, by, ADD_SIZE, ADD_SIZE) {
+        if d::inside(point, bx, by, ADD_W, ADD_H) {
             let mut browser = crate::pack_browser::Browser::new();
             // Opens on the text already in the search box, so a player who
             // searched their own packs first keeps the term; it is then the
@@ -1134,21 +1135,21 @@ impl PackScreen {
         }
         let Some(browser) = &self.browser else {
             let (bx, by) = self.add_button(m);
-            let hover = d::inside(mouse, bx, by, ADD_SIZE, ADD_SIZE);
+            let hover = d::inside(mouse, bx, by, ADD_W, ADD_H);
             d::button(
                 out,
                 m,
-                &tr("horizon.pack.add"),
+                &Text::literal("📥 Modrinth"),
                 bx,
                 by,
-                ADD_SIZE,
-                ADD_SIZE,
+                ADD_W,
+                ADD_H,
                 true,
                 hover,
                 now_ms,
             );
             if hover {
-                d::tooltip(out, m, &tr("horizon.pack.addInfo"), mouse);
+                d::tooltip(out, m, &Text::literal("Browse and download community resource packs from Modrinth"), mouse);
             }
             return;
         };
@@ -1366,7 +1367,7 @@ impl PackScreen {
     fn add_button(&self, m: &Measure) -> (i32, i32) {
         let (sx, sy) = self.header(m)[2];
         // The search box is 15 tall: centre the taller button on it.
-        (sx + 204, sy - (ADD_SIZE - 15) / 2)
+        (sx + 204, sy - (ADD_H - 15) / 2)
     }
     /// The footer's two buttons, "Open Pack Folder" and "Done", over their
     /// labels; a label wider than its button scrolls with the clock.

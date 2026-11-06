@@ -1346,6 +1346,7 @@ enum Act {
     /// Pick `s.shader_packs[i]`, or turn it off when it is the pick.
     PickShaderPack(usize),
     OpenShaderPackFolder,
+    OpenModrinthShaders,
     /// Open the picked pack's Shader Options page.
     ShaderOptions,
     /// Open the options page of the Horizon pack `s.shader_packs[.0]`.
@@ -1521,7 +1522,8 @@ pub enum Event {
     ListShaderPacks,
     /// A shader pack was picked or turned off: save and apply it.
     ShaderPack,
-    OpenShaderPackFolder,
+OpenShaderPackFolder,
+    OpenModrinthShaders,
     /// The Shader Options page opened: read the picked pack's options into `shader_options`.
     OpenShaderOptions,
     /// The Shader Options page closed with changes: save them and load the pack again.
@@ -2837,6 +2839,10 @@ impl OptionsUi {
                         ),
                         Some(open("horizon.pages.open.studio", Page::Studio)),
                     ),
+                    Row::Buttons(
+                        self.extra_button(s, crate::extras::Item::VrMode),
+                        Some(self.extra_button(s, crate::extras::Item::WorldDownloader)),
+                    ),
                     // No AI hides the AI Agent page and everything AI.
                     Row::Buttons(
                         self.extra_button(s, crate::extras::Item::DiscordPresence),
@@ -3649,8 +3655,14 @@ impl OptionsUi {
                     _ => None,
                 };
                 if let Some((label, act)) = folder {
-                    out.push(button(cx - 154.0, h - 27.0, 150.0, tr(label), act));
-                    out.push(button(cx + 4.0, h - 27.0, 150.0, tr("gui.done"), Act::Done));
+                    if page == Page::ShaderPacks {
+                        out.push(button(cx - 154.0, h - 27.0, 98.0, tr(label), act));
+                        out.push(button(cx - 50.0, h - 27.0, 100.0, Text::literal("📥 Modrinth"), Act::OpenModrinthShaders));
+                        out.push(button(cx + 56.0, h - 27.0, 98.0, tr("gui.done"), Act::Done));
+                    } else {
+                        out.push(button(cx - 154.0, h - 27.0, 150.0, tr(label), act));
+                        out.push(button(cx + 4.0, h - 27.0, 150.0, tr("gui.done"), Act::Done));
+                    }
                 } else {
                     out.push(done(h - 27.0));
                 }
@@ -4572,6 +4584,7 @@ impl OptionsUi {
                             }
                         }
                         Act::OpenShaderPackFolder => events.push(Event::OpenShaderPackFolder),
+                        Act::OpenModrinthShaders => events.push(Event::OpenModrinthShaders),
                         Act::ShaderOptions => {
                             s.shader_options = None;
                             self.push(Page::ShaderOptions);
@@ -5550,6 +5563,7 @@ impl OptionsUi {
                             }
                         }
                         Act::OpenShaderPackFolder => events.push(Event::OpenShaderPackFolder),
+                        Act::OpenModrinthShaders => events.push(Event::OpenModrinthShaders),
                         // The shader options page's buttons, as a click does them.
                         Act::ShaderOptions => {
                             self.focus = None;

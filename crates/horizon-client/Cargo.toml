@@ -14,6 +14,7 @@ autotests = false
 horizon-cosmetics = { path = "../horizon-cosmetics" }
 horizont-modloader = { path = "../horizont-modloader" }
 horizont-wdl = { path = "../horizont-wdl" }
+horizont-vr = { path = "../horizont-vr" }
 horizon-client-lib = { path = "../horizon-client-lib", default-features = false }
 horizon-assets = { path = "../horizon-assets" }
 horizon-client-core = { path = "../horizon-client-core" }

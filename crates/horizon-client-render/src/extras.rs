@@ -183,13 +183,19 @@ pub struct Extras {
     /// painted texel of a player's outer layer drawn as a slab
     /// (`horizon_client::mobs::skin_layers`).
     pub three_d_skin_layers: bool,
+    /// VR Mode via OpenXR.
+    pub vr_mode: bool,
+    /// World Downloader active chunk recording.
+    pub world_downloader: bool,
     /// The PvP & HUD page's options (`pvp`).
     pub pvp: crate::pvp::Pvp,
 }
 impl Default for Extras {
     fn default() -> Self {
         Self {
-            pack_browser: false,
+            pack_browser: true,
+            vr_mode: false,
+            world_downloader: false,
             pregen: false,
             fullbright: false,
             dynamic_lights: false,
@@ -273,6 +279,8 @@ impl Extras {
             };
             match key.trim() {
                 "packBrowser" => e.pack_browser = flag(e.pack_browser),
+                "vrMode" => e.vr_mode = flag(e.vr_mode),
+                "worldDownloader" => e.world_downloader = flag(e.world_downloader),
                 "pregen" => e.pregen = flag(e.pregen),
                 "fullbright" => e.fullbright = flag(e.fullbright),
                 "dynamicLights" => e.dynamic_lights = flag(e.dynamic_lights),
@@ -430,6 +438,7 @@ impl Extras {
             SKIN_LAYERS_KEY,
             bool_text(self.three_d_skin_layers),
         );
+        text.push_str(&format!("vrMode:{}\nworldDownloader:{}\n", bool_text(self.vr_mode), bool_text(self.world_downloader)));
         self.pvp.serialize(&mut text);
         text
     }
@@ -599,6 +608,8 @@ pub enum Item {
     WheelCyclesSettings,
     /// The Select Resource Packs screen's Add button (Modrinth).
     PackBrowser,
+    VrMode,
+    WorldDownloader,
     Pregen,
     /// Shown only while cosmetics are enabled (`horizon_cosmetics::enabled`).
     CosmeticsMine,
@@ -674,6 +685,8 @@ impl Item {
             Item::ChatIndicator => "horizon.extras.chat_indicator",
             Item::WheelCyclesSettings => "horizon.extras.wheel_cycles_settings",
             Item::PackBrowser => "horizon.extras.pack_browser",
+            Item::VrMode => "horizont.extras.vr_mode",
+            Item::WorldDownloader => "horizont.extras.world_downloader",
             Item::Pregen => "horizon.extras.pregen",
             Item::CosmeticsMine => "horizon.extras.cosmetics_mine",
             Item::CosmeticsOthers => "horizon.extras.cosmetics_others",
@@ -707,6 +720,8 @@ impl Item {
             Item::ChatIndicator => "horizon.extras.chat_indicator.tooltip",
             Item::WheelCyclesSettings => "horizon.extras.wheel_cycles_list_settings.tooltip",
             Item::PackBrowser => "horizon.extras.pack_browser.tooltip",
+            Item::VrMode => "horizont.extras.vr_mode.tooltip",
+            Item::WorldDownloader => "horizont.extras.world_downloader.tooltip",
             Item::Pregen => "horizon.extras.pregen.tooltip",
             Item::CosmeticsMine => "horizon.extras.cosmetics_mine.tooltip",
             Item::CosmeticsOthers => "horizon.extras.cosmetics_others.tooltip",
@@ -749,6 +764,8 @@ impl Item {
             Item::Splitscreen => "Splitscreen",
             Item::WheelCyclesSettings => "Scroll wheel changes settings",
             Item::PackBrowser => "Resource pack browser",
+            Item::VrMode => "VR Mode (OpenXR 6DoF)",
+            Item::WorldDownloader => "World Downloader",
             Item::Pregen => "Chunk pregeneration",
             Item::CosmeticsMine => "My cosmetics",
             Item::CosmeticsOthers => "Other players' cosmetics",
@@ -770,7 +787,7 @@ impl Item {
             Pvp(o) => return o.parent().map(Pvp),
             Fullbright | DynamicLights | OwnNameTag | HideBlockParticles | MouseTweaks | Sort
             | AutoReconnect | NoAi | AgentControl | ReproKeys | DiscordPresence | Splitscreen
-            | ChatAnimation | WheelCyclesSettings | MusicPage | PackBrowser | CosmeticsMine
+            | ChatAnimation | WheelCyclesSettings | MusicPage | PackBrowser | VrMode | WorldDownloader | CosmeticsMine
             | CosmeticsOthers | CosmeticsHideFx | CosmeticsSolo | HorizonMarks | HorizonMe
             | Pregen => {
                 return None;
@@ -858,6 +875,12 @@ impl Item {
             Item::PackBrowser => {
                 "Select Resource Packs gets an Add button that searches Modrinth and installs a pack into your packs folder. Off, the game never contacts Modrinth."
             }
+            Item::VrMode => {
+                "Enable 6DoF virtual reality headset tracking and stereo rendering via OpenXR (SteamVR, Oculus Quest Link)."
+            }
+            Item::WorldDownloader => {
+                "Download multiplayer server chunks and entities and save them locally to saves/ as a single-player world."
+            }
         }
     }
     /// The frame-time cost the main switch of an extra shows.
@@ -876,7 +899,7 @@ impl Item {
             | Item::Sort
             | Item::Splitscreen
             | Item::WheelCyclesSettings
-            | Item::PackBrowser => Some(Cost::None),
+            | Item::PackBrowser | Item::VrMode | Item::WorldDownloader => Some(Cost::None),
             Item::CosmeticsMine
             | Item::CosmeticsOthers
             | Item::CosmeticsHideFx
@@ -908,6 +931,8 @@ impl Item {
             Item::Splitscreen => e.splitscreen,
             Item::WheelCyclesSettings => e.wheel_cycles_settings,
             Item::PackBrowser => e.pack_browser,
+            Item::VrMode => e.vr_mode,
+            Item::WorldDownloader => e.world_downloader,
             Item::Pregen => e.pregen,
             Item::CosmeticsHideFx => e.cosmetics_hide_fx,
             Item::CosmeticsSolo => e.cosmetics_solo,
@@ -967,6 +992,8 @@ impl Item {
             Item::Splitscreen => e.splitscreen = !e.splitscreen,
             Item::WheelCyclesSettings => e.wheel_cycles_settings = !e.wheel_cycles_settings,
             Item::PackBrowser => e.pack_browser = !e.pack_browser,
+            Item::VrMode => e.vr_mode = !e.vr_mode,
+            Item::WorldDownloader => e.world_downloader = !e.world_downloader,
             Item::Pregen => e.pregen = !e.pregen,
             Item::CosmeticsMine => e.cosmetics_mine = !e.cosmetics_mine,
             Item::CosmeticsOthers => {

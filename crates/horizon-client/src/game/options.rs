@@ -352,6 +352,7 @@ impl Game<'_> {
                     self.sync_native_switches();
                     self.sync_pregen_option();
                     self.sync_agent_control();
+                    self.sync_horizont_features();
                     self.ui.options.agent_status = self.agent_status_lines();
                 }
                 Event::SliderDrag => {
@@ -456,6 +457,11 @@ impl Game<'_> {
                     let dir = Self::shader_packs_dir();
                     let _ = std::fs::create_dir_all(&dir);
                     super::packs::open_folder(&dir);
+                }
+                Event::OpenModrinthShaders => {
+                    let dir = Self::shader_packs_dir();
+                    let _ = std::fs::create_dir_all(&dir);
+                    self.confirm_trusted_link("https://modrinth.com/shaders", Screen::Options);
                 }
                 Event::NativeSettings(i) => self.native_settings_refresh(i),
                 Event::NativeButton(i, b) => self.native_settings_event(i, b),
@@ -678,6 +684,14 @@ impl Game<'_> {
     /// `Minecraft.runTick`'s frame limiter: `FramerateLimiter.limitDisplayFPS`
     /// below 260 frames per second, sleeping then spin-waiting until the
     /// frame's slot ends (not in scripted frame-count runs).
+    pub(super) fn sync_horizont_features(&self) {
+        if let Ok(mut vr_active) = horizont_vr::get().active.lock() {
+            *vr_active = self.settings.extras.vr_mode;
+        }
+        if let Ok(mut wdl_active) = horizont_wdl::get().active.lock() {
+            *wdl_active = self.settings.extras.world_downloader;
+        }
+    }
     pub(super) fn limit_frame(&mut self) {
         if self.options.frames.is_some() || self.options.paced_by_split {
             return;
@@ -757,3 +771,5 @@ mod controller_context_tests {
         );
     }
 }
+
+

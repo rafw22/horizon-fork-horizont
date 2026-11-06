@@ -105,6 +105,22 @@ fn pause_buttons(
         (
             x0 + 4.0,
             y0 + 146.0 + down,
+            98.0,
+            "horizont.wdl.toggle",
+            60,
+            true,
+        ),
+        (
+            x0 + 110.0,
+            y0 + 146.0 + down,
+            98.0,
+            "horizont.wdl.wireframe",
+            61,
+            true,
+        ),
+        (
+            x0 + 4.0,
+            y0 + 170.0 + down,
             204.0,
             if remote {
                 "menu.disconnect"
@@ -266,6 +282,23 @@ impl Game<'_> {
             let hover = active && (ui::hovered(self.cursor, x, y, bw, 20.0) || is_focused);
             let label = match (id, &additions) {
                 (14, Some((label, _))) => label.clone(),
+                (60, _) => {
+                    let on = horizont_wdl::get().active.lock().map(|a| *a).unwrap_or(false);
+                    Text::literal(format!("WDL: {}", if on { "ON" } else { "OFF" }))
+                }
+                (61, _) => {
+                    let hl = horizont_wdl::get().highlight_enabled.lock().map(|h| *h).unwrap_or(false);
+                    let mode = horizont_wdl::get().visual_mode.lock().map(|m| *m).unwrap_or(horizont_wdl::WdlVisualMode::OnlyMissing);
+                    let mode_str = if !hl {
+                        "Wire: OFF"
+                    } else {
+                        match mode {
+                            horizont_wdl::WdlVisualMode::OnlyMissing => "Wire: Miss",
+                            horizont_wdl::WdlVisualMode::AllChunks => "Wire: ALL",
+                        }
+                    };
+                    Text::literal(mode_str.to_string())
+                }
                 _ if self.options.split_guest && key == "menu.disconnect" => {
                     Text::translate("horizon.split.leave", &[])
                 }
@@ -385,6 +418,27 @@ impl Game<'_> {
             // PauseScreen: `new SocialInteractionsScreen(this)`.
             15 => self.open_social(true),
             30 => self.open_split_settings(),
+            60 => {
+                let active = horizont_wdl::get().toggle_active();
+                self.settings.extras.world_downloader = active;
+                log::info!("Horizont: World Downloader active = {}", active);
+            }
+            61 => {
+                let wdl = horizont_wdl::get();
+                let hl = wdl.highlight_enabled.lock().map(|h| *h).unwrap_or(false);
+                let mode = wdl.visual_mode.lock().map(|m| *m).unwrap_or(horizont_wdl::WdlVisualMode::OnlyMissing);
+                if !hl {
+                    let _ = wdl.toggle_highlight();
+                    if let Ok(mut m) = wdl.visual_mode.lock() {
+                        *m = horizont_wdl::WdlVisualMode::OnlyMissing;
+                    }
+                } else if mode == horizont_wdl::WdlVisualMode::OnlyMissing {
+                    let _ = wdl.cycle_visual_mode();
+                } else {
+                    let _ = wdl.toggle_highlight();
+                }
+                log::info!("Horizont: Wireframe cycled");
+            }
             // addCustomDialogButtons: DialogConnectionAccess.openDialog of the
             // additions dialog, from the pause menu.
             14 => {
