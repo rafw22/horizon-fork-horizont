@@ -1382,6 +1382,7 @@ dependencies = [
  "horizon-threads",
  "horizon-world",
  "horizont-modloader",
+ "horizont-vr",
  "horizont-wdl",
  "log",
  "miniz_oxide 0.8.9",
