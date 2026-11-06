@@ -1811,7 +1811,7 @@ impl Title {
                         cx - 100.0,
                         y + 48.0,
                         200.0,
-                        "Horizont Mods & Add-ons",
+                        "✦ Horizont Mods & Add-ons",
                         true,
                         8,
                     ),
@@ -3278,7 +3278,13 @@ Would you like to enable the Narrator or visit the Accessibility Settings?",
                 batch.rect_uv(b.x + half, b.y, half, 20.0, right, u32::MAX);
             }
             let color = if b.enabled {
-                u32::MAX
+                if b.id == 8 {
+                    if hover { rgba(110, 255, 255, 255) } else { rgba(70, 220, 230, 255) }
+                } else if hover {
+                    rgba(255, 255, 160, 255)
+                } else {
+                    u32::MAX
+                }
             } else {
                 rgba(160, 160, 160, 255)
             };
