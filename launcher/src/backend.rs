@@ -9,7 +9,7 @@ use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 
-pub const REPO: &str = "horizon-rust/horizon";
+pub const REPO: &str = "rafw22/horizon-fork-horizont";
 pub const README_URL: &str = "https://github.com/horizon-rust/horizon/blob/main/launcher/README.md";
 /// The players' page on connecting an AI agent (the website's docs/agents.md).
 pub const AGENT_DOCS_URL: &str = "https://playhorizon.dev/docs/agents";
@@ -837,8 +837,9 @@ pub fn latest(releases: &[Release]) -> Option<&Release> {
 
 /// The releases a launcher installs by itself: every one that is published as a release, so
 /// GitHub's latest when it comes out. The pre-releases of the old Alpha channel are left out.
-pub fn installable_updates(releases: &[Release]) -> Vec<Release> {
-    releases.iter().filter(|r| !r.prerelease).cloned().collect()
+pub fn installable_updates(_releases: &[Release]) -> Vec<Release> {
+    // Disabled developer/upstream updates per configuration
+    Vec::new()
 }
 
 /// How often a launcher left open looks for new releases: they come out several times a day.
