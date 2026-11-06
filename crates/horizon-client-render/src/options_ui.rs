@@ -3246,11 +3246,9 @@ impl OptionsUi {
                     tr("options.online"),
                     Act::Push(Page::Online),
                 ));
-                let entries = [
+                let vanilla_entries = [
                     ("options.skinCustomisation", Some(Page::Skin)),
                     ("options.sounds", Some(Page::Sound)),
-                    // Video Settings... opens Horizon's graphics screen, which holds every
-                    // video option, as Sodium's replaces vanilla's.
                     ("options.video", Some(Page::Graphics)),
                     ("options.controls", Some(Page::Controls)),
                     (
@@ -3263,22 +3261,25 @@ impl OptionsUi {
                         (!self.split_guest).then_some(Page::Packs),
                     ),
                     ("options.accessibility", Some(Page::Accessibility)),
-                    // Vanilla's Telemetry Data and Credits slots: Horizon's
-                    // settings and its mods, as a mod adds its button here.
-                    // Credits & Attribution (WinScreen's credits) follows them.
-                    ("horizon.pages.open.horizon_settings", Some(Page::Horizon)),
-                    ("horizon.pages.open.mods", Some(Page::Mods)),
-                    ("options.credits_and_attribution", Some(Page::Credits)),
                 ];
-                let rows = entries.len().div_ceil(2) as f32;
-                let gy = (61.0 + 30.0f32).min(h - 33.0 - rows * 24.0);
-                for (i, (key, page)) in entries.iter().enumerate() {
+                // Ergonomic layout: 4 vanilla rows, then a distinct isolated row
+                // for Horizont Settings & Mods, followed by Credits & Done.
+                let gy = (56.0f32).min(h - 33.0 - 6.0 * 24.0).max(52.0);
+                for (i, (key, page)) in vanilla_entries.iter().enumerate() {
                     let x = cx - 158.0 + 4.0 + (i % 2) as f32 * 158.0;
                     let y = gy + (i / 2) as f32 * 24.0;
                     let b = button(x, y, 150.0, tr(key), page.map_or(Act::None, Act::Push));
                     out.push(if page.is_some() { b } else { inactive(b) });
                 }
-                out.push(done(h - 27.0));
+                // Dedicated, misclick-proof Horizont row with extra breathing margin:
+                let horizont_y = gy + 4.0 * 24.0 + 4.0;
+                out.push(button(cx - 154.0, horizont_y, 150.0, tr("horizon.pages.open.horizon_settings"), Act::Push(Page::Horizon)));
+                out.push(button(cx + 4.0, horizont_y, 150.0, tr("horizon.pages.open.mods"), Act::Push(Page::Mods)));
+
+                // Bottom row: Credits on left, Done on right (symmetric and clean)
+                let bottom_y = (horizont_y + 26.0).min(h - 27.0);
+                out.push(button(cx - 154.0, bottom_y, 150.0, tr("options.credits_and_attribution"), Act::Push(Page::Credits)));
+                out.push(button(cx + 4.0, bottom_y, 150.0, tr("gui.done"), Act::Done));
                 top = 0.0;
                 bottom = 0.0;
             }

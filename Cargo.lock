@@ -1849,6 +1849,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "horizont-downloader"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "ureq",
+ "zip",
+]
+
+[[package]]
 name = "horizont-modloader"
 version = "0.1.0"
 dependencies = [
@@ -1862,6 +1873,16 @@ name = "horizont-patcher"
 version = "0.1.0"
 dependencies = [
  "log",
+]
+
+[[package]]
+name = "horizont-vr"
+version = "0.1.0"
+dependencies = [
+ "libloading",
+ "log",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -4258,6 +4279,8 @@ dependencies = [
  "once_cell",
  "rustls",
  "rustls-pki-types",
+ "serde",
+ "serde_json",
  "socks",
  "url",
  "webpki-roots 0.26.11",

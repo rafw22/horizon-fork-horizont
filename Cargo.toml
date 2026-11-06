@@ -44,6 +44,8 @@ members = [
     "crates/horizont-modloader",
     "crates/horizont-wdl",
     "crates/horizont-patcher",
+    "crates/horizont-downloader",
+    "crates/horizont-vr",
 ]
 resolver = "2"
 
