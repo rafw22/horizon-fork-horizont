@@ -1,0 +1,40 @@
+# Maintainer: rafw22 <rafw22@users.noreply.github.com>
+pkgname=horizont-bin
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="High-Performance Multi-Core Rust Minecraft Fork with Rayon, VR 6DoF, and Mod Downloader"
+arch=('x86_64' 'aarch64')
+url="https://github.com/rafw22/horizon-fork-horizont"
+license=('MIT')
+depends=('vulkan-driver' 'vulkan-icd-loader' 'openssl' 'alsa-lib')
+optdepends=(
+    'openxr: Native 6DoF VR support'
+    'monado: Open-source Linux OpenXR runtime'
+)
+provides=('horizont' 'horizon-client')
+conflicts=('horizon-client')
+
+package() {
+    install -dm755 "$pkgdir/usr/bin"
+    install -dm755 "$pkgdir/usr/share/horizont"
+    install -dm755 "$pkgdir/usr/share/applications"
+    install -dm755 "$pkgdir/usr/share/pixmaps"
+
+    install -m755 "$srcdir/horizont_client" "$pkgdir/usr/bin/horizont_client"
+    install -m755 "$srcdir/horizont-launcher" "$pkgdir/usr/bin/horizont-launcher"
+    
+    # Symlink default command
+    ln -s /usr/bin/horizont_client "$pkgdir/usr/bin/horizont"
+
+    # Desktop entry
+    cat <<EOF > "$pkgdir/usr/share/applications/horizont.desktop"
+[Desktop Entry]
+Name=Horizont
+Comment=High-Performance Multi-Core Rust Minecraft Fork
+Exec=horizont_client
+Icon=horizont
+Terminal=false
+Type=Application
+Categories=Game;
+EOF
+}
