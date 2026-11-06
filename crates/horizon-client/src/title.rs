@@ -678,6 +678,22 @@ fn world_narration(world: &WorldEntry) -> String {
     };
     narration_text("narrator.select", &[&entry])
 }
+/// Signature Horizont splash texts for the title screen.
+const HORIZONT_SPLASHES: &[&str] = &[
+    "Rayon Multi-Core Engine!",
+    "Zero tick lag!",
+    "OpenXR 6DoF Ready!",
+    "Native Rust Minecraft!",
+    "Instant 1s boot time!",
+    "Crafted with love by RAFW!",
+    "We are Horizont!",
+    "Uncapped FPS multi-threading!",
+    "Pure multithreaded vanilla!",
+    "Smooth 144+ FPS chunks!",
+    "Direct DLL Native Modloader!",
+    "Quest 2 / 3 / Pro 6DoF sync!",
+];
+
 fn choose_splash(text: &str, index: usize, date: (u32, u32)) -> Option<String> {
     // SplashManager checks SpecialDates before the resource list (local date).
     let special = match date {
@@ -800,7 +816,12 @@ impl Title {
             connect_request: None,
             toast: None,
             icons: RefCell::new(std::collections::HashMap::new()),
-            splash: choose_splash(&splashes, seed, (today.month(), today.day())),
+            splash: if seed % 2 == 0 {
+                Some(HORIZONT_SPLASHES[(seed as usize / 2) % HORIZONT_SPLASHES.len()].to_string())
+            } else {
+                choose_splash(&splashes, seed, (today.month(), today.day()))
+                    .or_else(|| Some(HORIZONT_SPLASHES[seed as usize % HORIZONT_SPLASHES.len()].to_string()))
+            },
             splash_you,
             recent: std::cell::RefCell::new(None),
             rules: RefCell::new(None),
