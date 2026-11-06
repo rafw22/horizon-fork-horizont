@@ -65,7 +65,7 @@ impl Game<'_> {
                 }
                 "fps" => self.debug_fps_line(d),
                 "game_version" => d.priority(format!(
-                    "Minecraft {v} ({v}/horizon)",
+                    "Horizont 26.3 [Rayon Multi-Core] (Minecraft {v}/horizont)",
                     v = horizon_client::save::VERSION_NAME
                 )),
                 "gpu_utilization" => d.line(overlay::gpu_line(self.gpu_utilization)),
