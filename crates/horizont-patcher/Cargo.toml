@@ -1,0 +1,9 @@
+[package]
+name = "horizont-patcher"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Automated updater and surgical patcher for Horizont on top of Horizon upstream"
+
+[dependencies]
+log = "0.4"
