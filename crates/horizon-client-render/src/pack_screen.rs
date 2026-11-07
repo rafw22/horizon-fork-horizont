@@ -373,7 +373,7 @@ fn tr(key: &str) -> Text {
 /// The Add button is square. The button sprite is a nine-slice built for a
 /// height of 20; drawn shorter, neither it nor its label sits right, so the
 /// button keeps that height and is centred on the shorter search box.
-const ADD_W: i32 = 90;
+const ADD_W: i32 = 135;
 const ADD_H: i32 = 20;
 /// A card in the grid: its icon beside its name, author and description.
 const ROW_H: i32 = 74;
@@ -1139,7 +1139,7 @@ impl PackScreen {
             d::button(
                 out,
                 m,
-                &Text::literal("📥 Modrinth"),
+                &Text::literal("+ Добавить (Modrinth)"),
                 bx,
                 by,
                 ADD_W,

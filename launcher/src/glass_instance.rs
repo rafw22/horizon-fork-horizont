@@ -384,8 +384,8 @@ impl Launcher {
         );
         let mut summary = match kind {
             NewKind::Horizon => match self.draft_horizon() {
-                Some(tag) => format!("Horizon · {}", version_label(&tag)),
-                None => "Horizon".into(),
+                Some(tag) => format!("Horizont · {}", version_label(&tag)),
+                None => "Horizont".into(),
             },
             NewKind::Vanilla => format!("{} · {minecraft}", tr("Vanilla")),
             NewKind::Modded => format!("{} · {minecraft}", loader.name()),

@@ -75,6 +75,15 @@ pub struct WorldDownloader {
 
     /// Counter for total chunks saved to disk in the current session.
     pub total_saved_count: Mutex<u64>,
+
+    /// Whether to capture entities (mobs, items, vehicles).
+    pub save_entities: Mutex<bool>,
+
+    /// Whether to capture tile entities and containers (chests, furnaces).
+    pub save_tile_entities: Mutex<bool>,
+
+    /// Recording chunk radius (e.g. 16 chunks).
+    pub save_radius: Mutex<i32>,
 }
 
 /// Display mode for the 3D in-game chunk grid overlay.
@@ -89,10 +98,10 @@ pub enum WdlVisualMode {
 impl Default for WorldDownloader {
     fn default() -> Self {
         Self {
-            // By default, WDL is enabled and ready to record when joined to a multiplayer server
-            active: Mutex::new(true),
-            // 3D highlight overlay is enabled by default to guide the player
-            highlight_enabled: Mutex::new(true),
+            // By default, WDL recording is off until enabled by player
+            active: Mutex::new(false),
+            // 3D highlight overlay MUST be OFF by default to avoid clutter / background lines
+            highlight_enabled: Mutex::new(false),
             visual_mode: Mutex::new(WdlVisualMode::OnlyMissing),
             // Bright neon crimson for missing chunks - unmistakable even through fog and terrain
             color_missing: Mutex::new(0xFFFF_0033),
@@ -102,6 +111,9 @@ impl Default for WorldDownloader {
             target_folder: Mutex::new(None),
             session_name: Mutex::new("Multiplayer_World".to_string()),
             total_saved_count: Mutex::new(0),
+            save_entities: Mutex::new(true),
+            save_tile_entities: Mutex::new(true),
+            save_radius: Mutex::new(16),
         }
     }
 }

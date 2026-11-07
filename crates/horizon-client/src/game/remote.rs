@@ -938,7 +938,7 @@ impl Game<'_> {
             || {
                 (
                     name.to_owned(),
-                    horizon_protocol::crypto::offline_uuid(name),
+                    self.options.player_uuid.unwrap_or_else(|| horizon_protocol::crypto::offline_uuid(name)),
                 )
             },
             |a| (a.name.clone(), a.uuid),

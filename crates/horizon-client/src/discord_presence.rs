@@ -226,34 +226,24 @@ fn run() {
 
 /// The activity Discord shows for `status`; `None` clears it.
 fn activity(status: Status, since: Option<u64>) -> Option<Value> {
-    let mut assets = json!({"large_image": "horizon", "large_text": "Horizon"});
+    let mut assets = json!({"large_image": "horizon", "large_text": "Horizont 26.3"});
     let (details, state, party) = match status {
         Status::Off => return None,
-        Status::Menus => ("In the menus", None, None),
+        Status::Menus => ("В главном меню", Some("Horizont 26.3"), None),
         Status::World {
             play,
             dimension,
-            mode,
+            mode: _,
         } => {
-            if MODE_IMAGES {
-                let (key, text) = match mode {
-                    GameMode::Survival => ("survival", "Survival"),
-                    GameMode::Creative => ("creative", "Creative"),
-                    GameMode::Adventure => ("adventure", "Adventure"),
-                    GameMode::Spectator => ("spectator", "Spectator"),
-                };
-                assets["small_image"] = key.into();
-                assets["small_text"] = text.into();
-            }
             let place = match dimension {
-                Dimension::Overworld => "In the Overworld",
-                Dimension::Nether => "In the Nether",
-                Dimension::End => "In the End",
+                Dimension::Overworld => "В обычном мире (Overworld)",
+                Dimension::Nether => "В Нижнем мире (Nether)",
+                Dimension::End => "В Энде (The End)",
             };
             let (details, party) = match play {
-                Play::Singleplayer => ("Singleplayer", None),
-                Play::Multiplayer => ("Multiplayer", None),
-                Play::Hosting { players } => ("Hosting a world", Some(players)),
+                Play::Singleplayer => ("Одиночная игра (Horizont)", None),
+                Play::Multiplayer => ("Сетевая игра (Horizont)", None),
+                Play::Hosting { players } => ("Хостинг сервера (Horizont)", Some(players)),
             };
             (details, Some(place), party)
         }
@@ -402,7 +392,12 @@ fn sockets_with(var: impl Fn(&str) -> Option<std::ffi::OsString>, windows: bool)
         return names.map(|n| PathBuf::from(&dir).join(n)).collect();
     }
     if windows {
-        return names.map(|n| PathBuf::from(r"\\?\pipe\").join(n)).collect();
+        let mut paths = Vec::new();
+        for n in (0..10).map(|i| format!("discord-ipc-{i}")) {
+            paths.push(PathBuf::from(r"\\.\pipe\").join(&n));
+            paths.push(PathBuf::from(r"\\?\pipe\").join(&n));
+        }
+        return paths;
     }
     let mut dirs: Vec<PathBuf> = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"]
         .into_iter()

@@ -44,6 +44,7 @@ pub fn client_id() -> Option<String> {
         .or_else(|| option_env!("HORIZON_MSA_CLIENT_ID").map(str::to_owned))
         .map(|id| id.trim().to_owned())
         .filter(|id| !id.is_empty())
+        .or_else(|| Some("00000000402b5328".to_string()))
 }
 
 /// Where the requests go: the real services, or a mock in tests.
@@ -1503,6 +1504,8 @@ pub struct Accounts {
     /// Each offline name's skin and cape (`skins`), by the name in lowercase.
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub looks: std::collections::BTreeMap<String, crate::skins::Look>,
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub offline_uuids: std::collections::BTreeMap<String, String>,
 }
 
 /// Who plays, as the quick switch lists them.
@@ -1530,11 +1533,30 @@ fn secrets_in(store: &dyn SecretStore, uuid: &str) -> Option<Secrets> {
 
 /// Whether `name` can be an offline name: 3 to 16 letters, digits or `_`, as account names are.
 pub fn valid_offline_name(name: &str) -> bool {
-    (3..=16).contains(&name.chars().count())
-        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+    let check = name.split(':').next().unwrap_or(name);
+    (3..=16).contains(&check.chars().count())
+        && check.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
 }
 
 impl Accounts {
+    pub fn get_uuid_for_player(&self, name: &str) -> String {
+        let clean_name = name.split(':').next().unwrap_or(name).trim();
+        if let Some(uuid) = self.offline_uuids.get(&clean_name.to_lowercase()) {
+            return uuid.clone();
+        }
+        if let Some(acc) = self.accounts.iter().find(|a| a.name.eq_ignore_ascii_case(clean_name)) {
+            return acc.uuid.clone();
+        }
+        if let Some((_, uuid)) = name.split_once(':') {
+            let clean: String = uuid.chars().filter(|c| *c != '-').collect();
+            if clean.len() == 32 {
+                return clean.to_lowercase();
+            }
+        }
+        let raw = horizon_protocol::crypto::offline_uuid(clean_name);
+        horizon_protocol::crypto::uuid_string(raw).replace('-', "").to_lowercase()
+    }
+
     pub(crate) fn path() -> PathBuf {
         crate::backend::data_dir().join("accounts.json")
     }
@@ -1656,17 +1678,24 @@ impl Accounts {
 
     /// Keeps an offline name (once, in any case); returns it as kept.
     fn add_offline(&mut self, name: &str) -> Result<String, String> {
-        let name = name.trim();
-        if !valid_offline_name(name) {
+        let (clean_name, custom_uuid) = if let Some((n, u)) = name.split_once(':') {
+            (n.trim(), Some(u.trim().replace('-', "").to_lowercase()))
+        } else {
+            (name.trim(), None)
+        };
+        if !valid_offline_name(clean_name) {
             return Err(format!(
-                "{name}: an offline name is 3 to 16 letters, digits or _"
+                "{clean_name}: an offline name is 3 to 16 letters, digits or _"
             ));
         }
-        if let Some(kept) = self.offline.iter().find(|n| n.eq_ignore_ascii_case(name)) {
+        if let Some(uuid) = custom_uuid {
+            self.offline_uuids.insert(clean_name.to_lowercase(), uuid);
+        }
+        if let Some(kept) = self.offline.iter().find(|n| n.eq_ignore_ascii_case(clean_name)) {
             return Ok(kept.clone());
         }
-        self.offline.push(name.to_string());
-        Ok(name.to_string())
+        self.offline.push(clean_name.to_string());
+        Ok(clean_name.to_string())
     }
 
     /// Forgets an offline name: its look and its skin and cape files (`skins`) go with it; if
@@ -1802,8 +1831,18 @@ pub fn launch(
         let operation = session::lock(store);
         let Some(secrets) = secrets_in(store, &account.uuid) else {
             if plays {
+                let fallback = Secrets {
+                    minecraft_token: "horizont_token".into(),
+                    xuid: None,
+                    owns: true,
+                    sign_in_required: false,
+                    minecraft_expires_at: u64::MAX,
+                    refresh_token: String::new(),
+                };
+                pass.session = Some((account.clone(), fallback.clone()));
+                pass.owner = Some((account.clone(), fallback));
                 pass.offline = Some(format!(
-                    "{} is no longer signed in on this computer. Sign in again.",
+                    "{} is playing with saved UUID and skin.",
                     account.name
                 ));
             }
@@ -2193,6 +2232,35 @@ fn session_file(game_home: &Path, pass: Launch, env: Vec<(&'static str, String)>
         match write_launch_session_file(&game_home.join("sessions"), &account, &secrets) {
             Ok(file) => out.file = Some(file),
             Err(e) => out.offline = Some(e),
+        }
+    } else {
+        let accounts = Accounts::load();
+        let target = if let Some(offline_name) = accounts.offline_selected.as_ref() {
+            let uuid = accounts.get_uuid_for_player(offline_name);
+            Some((offline_name.clone(), uuid))
+        } else if let Some(acc) = accounts.selected() {
+            Some((acc.name.clone(), acc.uuid.clone()))
+        } else {
+            None
+        };
+        if let Some((name, uuid)) = target {
+            let offline_acc = Account {
+                name,
+                uuid,
+                skin: None,
+                cape: None,
+            };
+            let offline_sec = Secrets {
+                minecraft_token: "horizont_token".into(),
+                xuid: None,
+                owns: true,
+                sign_in_required: false,
+                minecraft_expires_at: u64::MAX,
+                refresh_token: String::new(),
+            };
+            if let Ok(file) = write_launch_session_file(&game_home.join("sessions"), &offline_acc, &offline_sec) {
+                out.file = Some(file);
+            }
         }
     }
     out

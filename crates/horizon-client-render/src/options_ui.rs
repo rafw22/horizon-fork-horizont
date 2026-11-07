@@ -1327,6 +1327,8 @@ pub enum Page {
     /// The built-in music tracks, by situation: play one, turn any off
     /// (vanilla's `minecraft:audio/background_music` pools).
     Music,
+    VrSettings,
+    WorldDownloader,
 }
 #[derive(Clone, Debug, PartialEq)]
 enum Act {
@@ -1367,6 +1369,8 @@ enum Act {
     NativeKey(usize, usize),
     NativeButton(usize, usize),
     OpenModFolder,
+    ClearWdlSession,
+    OpenSavesFolder,
     /// Browse mods: the page of listing `.0` of `mod_browser`.
     ModProject(usize),
     /// The open project page's Install or Update.
@@ -1729,7 +1733,7 @@ impl Default for OptionsUi {
             mod_project: String::new(),
             mods_note: None,
             mods_live: Default::default(),
-            pack_browser: false,
+            pack_browser: true,
             pack_infos: Vec::new(),
             pack_selection: Vec::new(),
             pack_screen: None,
@@ -1861,6 +1865,8 @@ fn horizon_page_tooltip(page: Page) -> Option<&'static str> {
         Page::Mods => "horizon.pages.mods.tooltip",
         Page::SplitSetup => "horizon.pages.split_setup.tooltip",
         Page::Music => "horizon.pages.music.tooltip",
+        Page::VrSettings => "horizon.pages.vr.tooltip",
+        Page::WorldDownloader => "horizon.pages.wdl.tooltip",
         _ => return None,
     })
 }
@@ -2511,6 +2517,8 @@ impl OptionsUi {
             Page::SplitProfiles => "horizon.pages.split_profiles",
             Page::SplitSetup => "horizon.pages.split_setup",
             Page::Music => "horizon.pages.music",
+            Page::VrSettings => "horizon.pages.vr",
+            Page::WorldDownloader => "horizon.pages.wdl",
         }
     }
     fn scrollbar_x(&self, width: f32) -> f32 {
@@ -2840,8 +2848,8 @@ impl OptionsUi {
                         Some(open("horizon.pages.open.studio", Page::Studio)),
                     ),
                     Row::Buttons(
-                        self.extra_button(s, crate::extras::Item::VrMode),
-                        Some(self.extra_button(s, crate::extras::Item::WorldDownloader)),
+                        open("horizon.pages.open.vr", Page::VrSettings),
+                        Some(open("horizon.pages.open.wdl", Page::WorldDownloader)),
                     ),
                     // No AI hides the AI Agent page and everything AI.
                     Row::Buttons(
@@ -2999,6 +3007,33 @@ impl OptionsUi {
                     }
                 }
                 rows
+            }
+            Page::VrSettings => {
+                let b = |item: crate::extras::Item| self.extra_button(s, item);
+                vec![
+                    Row::Buttons(b(crate::extras::Item::VrMode), Some(b(crate::extras::Item::VrRuntime))),
+                    Row::Buttons(b(crate::extras::Item::Vr6Dof), Some(b(crate::extras::Item::VrControllers))),
+                    Row::Buttons(b(crate::extras::Item::VrTurnMode), Some(b(crate::extras::Item::VrMovement))),
+                    Row::Buttons(b(crate::extras::Item::VrWorldScale), Some(b(crate::extras::Item::VrRenderMode))),
+                    Row::Buttons(b(crate::extras::Item::VrMotionSmoothing), Some(b(crate::extras::Item::VrVignette))),
+                ]
+            }
+            Page::WorldDownloader => {
+                let b = |item: crate::extras::Item| self.extra_button(s, item);
+                let saved_count = horizont_wdl::get().downloaded_count();
+                let is_rec = horizont_wdl::get().active.lock().map(|a| *a).unwrap_or(false);
+                let status_str = if is_rec {
+                    format!("WDL: Запись активна | Сохранено чанков: {}", saved_count)
+                } else {
+                    format!("WDL: Ожидание | Сохранено чанков: {}", saved_count)
+                };
+                vec![
+                    Row::Buttons(b(crate::extras::Item::WorldDownloader), Some(b(crate::extras::Item::WdlGridMode))),
+                    Row::Buttons(b(crate::extras::Item::WdlEntities), Some(b(crate::extras::Item::WdlTileEntities))),
+                    Row::Buttons(b(crate::extras::Item::WdlRadius), Some(button(0.0, 0.0, 150.0, tr("horizon.wdl.clear_session"), Act::ClearWdlSession))),
+                    Row::Buttons(button(0.0, 0.0, 310.0, tr("horizon.wdl.open_saves"), Act::OpenSavesFolder), None),
+                    Row::Note(status_str),
+                ]
             }
             Page::Skin => {
                 // SkinCustomizationScreen: the seven layers, then Main Hand.
@@ -4552,6 +4587,18 @@ impl OptionsUi {
                         }
                         Act::NativeButton(i, b) => events.push(Event::NativeButton(i, b)),
                         Act::OpenModFolder => events.push(Event::OpenModFolder),
+                        Act::ClearWdlSession => {
+                            horizont_wdl::get().clear_session_data();
+                            events.push(Event::Changed);
+                        }
+                        Act::OpenSavesFolder => {
+                            let dir = std::path::PathBuf::from("saves");
+                            let _ = std::fs::create_dir_all(&dir);
+                            #[cfg(windows)]
+                            let _ = std::process::Command::new("explorer").arg(&dir).spawn();
+                            #[cfg(not(windows))]
+                            let _ = std::process::Command::new("xdg-open").arg(&dir).spawn();
+                        }
                         Act::ModProject(i) => {
                             if let Some(listing) = self.mod_browser.listings.get(i) {
                                 self.mod_project = listing.id.clone();
@@ -4944,7 +4991,7 @@ impl OptionsUi {
                     self.pack_infos.clone(),
                     &self.pack_selection,
                 );
-                screen.browsing_allowed = self.pack_browser;
+                screen.browsing_allowed = true;
                 screen.changed = std::mem::take(&mut self.pack_reselected);
                 self.pack_screen = Some(screen);
             }
@@ -5531,6 +5578,18 @@ impl OptionsUi {
                         }
                         Act::NativeButton(i, b) => events.push(Event::NativeButton(i, b)),
                         Act::OpenModFolder => events.push(Event::OpenModFolder),
+                        Act::ClearWdlSession => {
+                            horizont_wdl::get().clear_session_data();
+                            events.push(Event::Changed);
+                        }
+                        Act::OpenSavesFolder => {
+                            let dir = std::path::PathBuf::from("saves");
+                            let _ = std::fs::create_dir_all(&dir);
+                            #[cfg(windows)]
+                            let _ = std::process::Command::new("explorer").arg(&dir).spawn();
+                            #[cfg(not(windows))]
+                            let _ = std::process::Command::new("xdg-open").arg(&dir).spawn();
+                        }
                         Act::ModProject(i) => {
                             if let Some(listing) = self.mod_browser.listings.get(i) {
                                 self.mod_project = listing.id.clone();

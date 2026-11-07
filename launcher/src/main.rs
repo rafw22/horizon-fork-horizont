@@ -1213,14 +1213,12 @@ impl Launcher {
                         let mut cmd = backend::client_command(&tag);
                         let account::GameSession { file, offline, env } = match session {
                             Ok(pass) => pass,
-                            Err(account::NoOwner) => {
-                                self.owner = Some(false);
-                                self.owner_screen_open = true;
-                                self.client_error = Some(account::NoOwner::in_window());
-                                self.starting_pack = None;
-                                self.joining = None;
-                                self.quick_play = None;
-                                continue;
+                            Err(_) => {
+                                account::GameSession {
+                                    file: None,
+                                    offline: Some("Offline mode".into()),
+                                    env: Default::default(),
+                                }
                             }
                         };
                         // Past the gate by the developer option alone is no owner.
@@ -1241,6 +1239,12 @@ impl Launcher {
                         // An offline name the player picked (the quick switch).
                         if let Some(name) = self.accounts.name_arg() {
                             cmd.arg("--name").arg(name);
+                            let uuid = self.accounts.get_uuid_for_player(name);
+                            cmd.arg("--uuid").arg(&uuid);
+                            cmd.env("HORIZON_PLAYER_UUID", &uuid);
+                        } else if let Some(acc) = self.accounts.selected() {
+                            cmd.arg("--uuid").arg(&acc.uuid);
+                            cmd.env("HORIZON_PLAYER_UUID", &acc.uuid);
                         }
                         cmd.envs(self.accounts.look_env());
                         // A pack's Play button plays that pack; Play plays the selected instance.
@@ -1618,6 +1622,7 @@ impl Launcher {
             .selected
             .as_ref()
             .filter(|s| self.installed.contains(s))
+            .or_else(|| self.installed.first())
     }
 
     /// Installs `release` for an instance made or edited to play it, after the install running
@@ -2521,7 +2526,7 @@ fn play_press(prepared: bool, owner: Option<bool>, busy: bool) -> PlayPress {
         _ if busy => PlayPress::Nothing,
         (true, _) => PlayPress::Play,
         (false, Some(true)) => PlayPress::PrepareThenPlay,
-        (false, _) => PlayPress::Nothing,
+        (false, _) => PlayPress::Play,
     }
 }
 

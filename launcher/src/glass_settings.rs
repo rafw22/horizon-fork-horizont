@@ -209,6 +209,86 @@ impl Launcher {
         )
     }
 
+    fn vr_mode_row(&mut self, cx: &mut Context<Self>) -> Div {
+        let t = self.theme;
+        let file = backend::game_home().join("horizon-extras.txt");
+        let content = std::fs::read_to_string(&file).unwrap_or_default();
+        let on = content.lines().any(|l| l.trim() == "vrMode: true");
+        ui::setting_row(
+            tr("VR Mode (OpenXR 6DoF)"),
+            Some(
+                div()
+                    .child(tr(
+                        "Enable virtual reality headset tracking and stereo rendering via OpenXR (SteamVR, Oculus Quest Link).",
+                    ))
+                    .into_any_element(),
+            ),
+            Some(
+                crate::switch("settings-vr-mode", on, &t)
+                    .on_click(cx.listener(move |_, _: &ClickEvent, _, cx| {
+                        let f = backend::game_home().join("horizon-extras.txt");
+                        let mut text = std::fs::read_to_string(&f).unwrap_or_default();
+                        if text.contains("vrMode:") {
+                            let mut lines: Vec<String> = text.lines().map(|l| {
+                                if l.starts_with("vrMode:") {
+                                    format!("vrMode: {}", !on)
+                                } else {
+                                    l.to_string()
+                                }
+                            }).collect();
+                            lines.push(String::new());
+                            let _ = std::fs::write(&f, lines.join("\n"));
+                        } else {
+                            text.push_str(if on { "vrMode: false\n" } else { "vrMode: true\n" });
+                            let _ = std::fs::write(&f, text);
+                        }
+                        cx.notify();
+                    }))
+                    .into_any_element(),
+            ),
+        )
+    }
+
+    fn world_downloader_row(&mut self, cx: &mut Context<Self>) -> Div {
+        let t = self.theme;
+        let file = backend::game_home().join("horizon-extras.txt");
+        let content = std::fs::read_to_string(&file).unwrap_or_default();
+        let on = content.lines().any(|l| l.trim() == "worldDownloader: true");
+        ui::setting_row(
+            tr("World Downloader"),
+            Some(
+                div()
+                    .child(tr(
+                        "Automatically save visited multiplayer server chunks and entities into local single-player saves.",
+                    ))
+                    .into_any_element(),
+            ),
+            Some(
+                crate::switch("settings-wdl-mode", on, &t)
+                    .on_click(cx.listener(move |_, _: &ClickEvent, _, cx| {
+                        let f = backend::game_home().join("horizon-extras.txt");
+                        let mut text = std::fs::read_to_string(&f).unwrap_or_default();
+                        if text.contains("worldDownloader:") {
+                            let mut lines: Vec<String> = text.lines().map(|l| {
+                                if l.starts_with("worldDownloader:") {
+                                    format!("worldDownloader: {}", !on)
+                                } else {
+                                    l.to_string()
+                                }
+                            }).collect();
+                            lines.push(String::new());
+                            let _ = std::fs::write(&f, lines.join("\n"));
+                        } else {
+                            text.push_str(if on { "worldDownloader: false\n" } else { "worldDownloader: true\n" });
+                            let _ = std::fs::write(&f, text);
+                        }
+                        cx.notify();
+                    }))
+                    .into_any_element(),
+            ),
+        )
+    }
+
     /// The Game card's switch for registry mods' automatic updates (`horizon::auto`).
     fn mods_auto_update_row(&mut self, cx: &mut Context<Self>) -> Div {
         let t = self.theme;
@@ -426,6 +506,8 @@ impl Launcher {
         let game = card()
             .child(self.game_architecture_row(n, cx))
             .child(self.game_args_row(n + 1, cx))
+            .child(self.vr_mode_row(cx))
+            .child(self.world_downloader_row(cx))
             .child(self.mods_auto_update_row(cx))
             .child(self.native_mods_row(cx));
         let ai = card()

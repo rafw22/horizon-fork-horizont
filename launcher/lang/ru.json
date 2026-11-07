@@ -931,7 +931,7 @@
   "Edit {name}": "Изменить {name}",
   "Fabric mods run here too": "Моды Fabric тоже работают",
   "For older packs": "Для старых сборок",
-  "Horizon": "Horizon",
+  "Horizon": "Horizont",
   "Installs the newest stable {loader} for Minecraft {version}.": "Устанавливает последний стабильный {loader} для Minecraft {version}.",
   "Its mods, worlds and options": "Её моды, миры и настройки",
   "Its own worlds and packs. Your options and player name come along.": "Свои миры и наборы. Ваши настройки и имя игрока переносятся.",
@@ -1222,5 +1222,6 @@
   "{name} was left out: it needs {other}, which was left out": "{name} пропущен: ему нужен {other}, который пропущен",
   "Doesn't build on the Horizon you play ({code}): a build leaves it out until its author updates it": "Не собирается на Horizon, в который вы играете ({code}): сборка пропустит его, пока автор не обновит",
   "Where you are, the founder set is claimed through a free checkout on playhorizon.dev. Claim it from the Shop: it opens the checkout for you.": "В вашей стране набор основателя получают через бесплатное оформление на playhorizon.dev. Получите его в Магазине: он сам откроет оформление.",
-  "The founder set can't be claimed from your country.": "Набор основателя нельзя получить из вашей страны."
+  "The founder set can't be claimed from your country.": "Набор основателя нельзя получить из вашей страны.",
+  "Horizon Launcher": "Horizont Launcher"
 }

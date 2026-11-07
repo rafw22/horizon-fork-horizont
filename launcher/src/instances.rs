@@ -294,7 +294,7 @@ fn list_in(game_home: &Path, data: &Path) -> Vec<Instance> {
     let mut store = Store::load(data);
     let mut found = vec![(
         DEFAULT.to_string(),
-        "Horizon".to_string(),
+        "Horizont".to_string(),
         Kind::Default,
         game_home.to_path_buf(),
         game_home.to_path_buf(),
@@ -343,7 +343,7 @@ fn list_in(game_home: &Path, data: &Path) -> Vec<Instance> {
         .map(|(id, name, kind, work, home)| {
             let meta = store.instances.get(&id).cloned().unwrap_or_default();
             Instance {
-                name: meta.name.unwrap_or(name),
+                name: match meta.name.unwrap_or(name) { n if n == "Horizon" => "Horizont".to_string(), other => other },
                 icon: meta.icon,
                 group: meta.group,
                 version: meta.version,

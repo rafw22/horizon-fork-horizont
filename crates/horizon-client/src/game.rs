@@ -546,6 +546,7 @@ struct Options {
     /// `--name`, `HORIZON_PLAYER_NAME` or the signed-in account's name; else
     /// [`Options::player_name`] uses the kept offline name.
     player_name: Option<String>,
+    pub player_uuid: Option<u128>,
     /// `--dedicated`: run as a dedicated server; vanilla's server arguments
     /// (`--nogui`, `--port`, `--world`, `--universe`, `--initSettings`) follow.
     dedicated: Option<Vec<String>>,
@@ -696,6 +697,9 @@ impl Options {
             player_name: std::env::var("HORIZON_PLAYER_NAME")
                 .ok()
                 .filter(|n| !n.is_empty()),
+            player_uuid: std::env::var("HORIZON_PLAYER_UUID")
+                .ok()
+                .and_then(|u| horizon_client_render::auth::parse_uuid(&u)),
             dedicated: None,
             transfers: None,
             benchmark: None,
@@ -839,6 +843,7 @@ impl Options {
                             }
                             "--server" | "--quickPlayMultiplayer" => o.server = Some(value),
                             "--name" => o.player_name = Some(value),
+                            "--uuid" => o.player_uuid = horizon_client_render::auth::parse_uuid(&value),
                             "--session-file" => o.session_file = Some(value),
                             "--control-socket" => o.control = Some(value.into()),
                             "--transfers" => {

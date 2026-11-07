@@ -410,5 +410,39 @@ impl Launcher {
                     .as_ref()
                     .map(|v| json_view(v, &t, &self.collection.json_scroll)),
             )
+            .child(
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(6.))
+                    .p(px(14.))
+                    .mt(px(12.))
+                    .rounded(px(8.))
+                    .bg(t.plate_soft)
+                    .border_1()
+                    .border_color(t.rule)
+                    .child(
+                        text(theme::UI)
+                            .font_weight(FontWeight::MEDIUM)
+                            .text_color(t.ink)
+                            .child("Original launcher and core features by Horizon"),
+                    )
+                    .child(
+                        text(theme::CAPTION)
+                            .text_color(t.muted)
+                            .child("All additional Horizont features and engine optimizations are built on top of the original Horizon launcher and game codebase."),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .mt(px(4.))
+                            .child(
+                                button("horizon-repo-link", "Horizon GitHub Repository", Kind::Ghost, &t)
+                                    .on_click(|_, _, cx| {
+                                        cx.open_url("https://github.com/horizon-rust/horizon");
+                                    })
+                            )
+                    )
+            )
     }
 }

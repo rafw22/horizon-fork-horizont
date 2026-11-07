@@ -956,15 +956,18 @@ impl Game<'_> {
             g.chunk_borders(block, min_y, min_y + self.world.layout().height() - 1);
         }
         // Horizont WDL: 3D real-time chunk highlight overlay (missing vs downloaded chunks)
-        let wdl_lines = horizont_wdl::get().generate_gizmo_lines(
-            camera[0],
-            camera[2],
-            self.options.distance,
-            self.world.bottom_y(),
-            self.world.bottom_y() + self.world.layout().height() - 1,
-        );
-        for line in wdl_lines {
-            g.line(line.start, line.end, line.color, line.width);
+        // Only render if actively connected to a game world (not title screen panorama) and player exists!
+        if self.title.is_none() && self.player.is_some() {
+            let wdl_lines = horizont_wdl::get().generate_gizmo_lines(
+                camera[0],
+                camera[2],
+                self.options.distance,
+                self.world.bottom_y(),
+                self.world.bottom_y() + self.world.layout().height() - 1,
+            );
+            for line in wdl_lines {
+                g.line(line.start, line.end, line.color, line.width);
+            }
         }
         if !self.debug_entry("entity_hitboxes") {
             return g;

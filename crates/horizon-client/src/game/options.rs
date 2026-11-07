@@ -461,7 +461,7 @@ impl Game<'_> {
                 Event::OpenModrinthShaders => {
                     let dir = Self::shader_packs_dir();
                     let _ = std::fs::create_dir_all(&dir);
-                    self.confirm_trusted_link("https://modrinth.com/shaders", Screen::Options);
+                    let _ = open::that("https://modrinth.com/shaders");
                 }
                 Event::NativeSettings(i) => self.native_settings_refresh(i),
                 Event::NativeButton(i, b) => self.native_settings_event(i, b),

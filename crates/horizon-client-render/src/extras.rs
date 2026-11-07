@@ -185,8 +185,22 @@ pub struct Extras {
     pub three_d_skin_layers: bool,
     /// VR Mode via OpenXR.
     pub vr_mode: bool,
+    pub vr_runtime: u8,
+    pub vr_6dof: bool,
+    pub vr_controllers: bool,
+    pub vr_turn_mode: u8,
+    pub vr_movement: bool,
+    pub vr_world_scale: u8,
+    pub vr_render_mode: u8,
+    pub vr_motion_smoothing: bool,
+    pub vr_vignette: u8,
+
     /// World Downloader active chunk recording.
     pub world_downloader: bool,
+    pub wdl_grid_mode: u8,
+    pub wdl_entities: bool,
+    pub wdl_tile_entities: bool,
+    pub wdl_radius: u8,
     /// The PvP & HUD page's options (`pvp`).
     pub pvp: crate::pvp::Pvp,
 }
@@ -195,7 +209,21 @@ impl Default for Extras {
         Self {
             pack_browser: true,
             vr_mode: false,
+            vr_runtime: 0,
+            vr_6dof: true,
+            vr_controllers: true,
+            vr_turn_mode: 0,
+            vr_movement: true,
+            vr_world_scale: 0,
+            vr_render_mode: 0,
+            vr_motion_smoothing: true,
+            vr_vignette: 0,
+
             world_downloader: false,
+            wdl_grid_mode: 0,
+            wdl_entities: true,
+            wdl_tile_entities: true,
+            wdl_radius: 0,
             pregen: false,
             fullbright: false,
             dynamic_lights: false,
@@ -609,7 +637,21 @@ pub enum Item {
     /// The Select Resource Packs screen's Add button (Modrinth).
     PackBrowser,
     VrMode,
+    VrRuntime,
+    Vr6Dof,
+    VrControllers,
+    VrTurnMode,
+    VrMovement,
+    VrWorldScale,
+    VrRenderMode,
+    VrMotionSmoothing,
+    VrVignette,
+
     WorldDownloader,
+    WdlGridMode,
+    WdlEntities,
+    WdlTileEntities,
+    WdlRadius,
     Pregen,
     /// Shown only while cosmetics are enabled (`horizon_cosmetics::enabled`).
     CosmeticsMine,
@@ -639,6 +681,8 @@ pub fn rows() -> Vec<Result<Item, &'static str>> {
         Ok(ChatIndicator),
         Err("horizon.extras.header.world"),
         Ok(Pregen),
+        Ok(WorldDownloader),
+        Ok(VrMode),
         Err("horizon.extras.header.multiplayer"),
         Ok(AutoReconnect),
         Err("horizon.extras.header.sound"),
@@ -685,8 +729,22 @@ impl Item {
             Item::ChatIndicator => "horizon.extras.chat_indicator",
             Item::WheelCyclesSettings => "horizon.extras.wheel_cycles_settings",
             Item::PackBrowser => "horizon.extras.pack_browser",
-            Item::VrMode => "horizont.extras.vr_mode",
-            Item::WorldDownloader => "horizont.extras.world_downloader",
+            Item::VrMode => "horizon.extras.vr_mode",
+            Item::VrRuntime => "horizon.extras.vr_runtime",
+            Item::Vr6Dof => "horizon.extras.vr_6dof",
+            Item::VrControllers => "horizon.extras.vr_controllers",
+            Item::VrTurnMode => "horizon.extras.vr_turn_mode",
+            Item::VrMovement => "horizon.extras.vr_movement",
+            Item::VrWorldScale => "horizon.extras.vr_world_scale",
+            Item::VrRenderMode => "horizon.extras.vr_render_mode",
+            Item::VrMotionSmoothing => "horizon.extras.vr_motion_smoothing",
+            Item::VrVignette => "horizon.extras.vr_vignette",
+
+            Item::WorldDownloader => "horizon.extras.world_downloader",
+            Item::WdlGridMode => "horizon.extras.wdl_grid_mode",
+            Item::WdlEntities => "horizon.extras.wdl_entities",
+            Item::WdlTileEntities => "horizon.extras.wdl_tile_entities",
+            Item::WdlRadius => "horizon.extras.wdl_radius",
             Item::Pregen => "horizon.extras.pregen",
             Item::CosmeticsMine => "horizon.extras.cosmetics_mine",
             Item::CosmeticsOthers => "horizon.extras.cosmetics_others",
@@ -730,6 +788,7 @@ impl Item {
             Item::HorizonMarks => "horizon.extras.horizon_marks.tooltip",
             Item::HorizonMe => "horizon.extras.horizon_me.tooltip",
             Item::Pvp(o) => o.description_key(),
+            _ => "",
         }
     }
     /// The caption in the current language (English when the key is missing).
@@ -764,8 +823,22 @@ impl Item {
             Item::Splitscreen => "Splitscreen",
             Item::WheelCyclesSettings => "Scroll wheel changes settings",
             Item::PackBrowser => "Resource pack browser",
-            Item::VrMode => "VR Mode (OpenXR 6DoF)",
-            Item::WorldDownloader => "World Downloader",
+            Item::VrMode => "VR Mode (OpenXR)",
+            Item::VrRuntime => "OpenXR Runtime",
+            Item::Vr6Dof => "Head Tracking",
+            Item::VrControllers => "VR Controllers",
+            Item::VrTurnMode => "Turn Mode",
+            Item::VrMovement => "Movement Direction",
+            Item::VrWorldScale => "World Scale",
+            Item::VrRenderMode => "Render Mode",
+            Item::VrMotionSmoothing => "Motion Smoothing",
+            Item::VrVignette => "Comfort Vignette",
+
+            Item::WorldDownloader => "World Recording (WDL)",
+            Item::WdlGridMode => "3D Chunk Grid",
+            Item::WdlEntities => "Save Entities",
+            Item::WdlTileEntities => "Save Tile Entities",
+            Item::WdlRadius => "Recording Radius",
             Item::Pregen => "Chunk pregeneration",
             Item::CosmeticsMine => "My cosmetics",
             Item::CosmeticsOthers => "Other players' cosmetics",
@@ -780,18 +853,11 @@ impl Item {
     pub fn parent(self) -> Option<Item> {
         use Item::*;
         Some(match self {
-            UiSoundReserve => return None,
             MouseTweaksWheel => MouseTweaks,
             SortKey => Sort,
             ChatIndicator => ChatAnimation,
             Pvp(o) => return o.parent().map(Pvp),
-            Fullbright | DynamicLights | OwnNameTag | HideBlockParticles | MouseTweaks | Sort
-            | AutoReconnect | NoAi | AgentControl | ReproKeys | DiscordPresence | Splitscreen
-            | ChatAnimation | WheelCyclesSettings | MusicPage | PackBrowser | VrMode | WorldDownloader | CosmeticsMine
-            | CosmeticsOthers | CosmeticsHideFx | CosmeticsSolo | HorizonMarks | HorizonMe
-            | Pregen => {
-                return None;
-            }
+            _ => return None,
         })
     }
     /// The English description: the fallback of [`Item::description_text`].
@@ -881,6 +947,7 @@ impl Item {
             Item::WorldDownloader => {
                 "Download multiplayer server chunks and entities and save them locally to saves/ as a single-player world."
             }
+            _ => "",
         }
     }
     /// The frame-time cost the main switch of an extra shows.
@@ -932,7 +999,13 @@ impl Item {
             Item::WheelCyclesSettings => e.wheel_cycles_settings,
             Item::PackBrowser => e.pack_browser,
             Item::VrMode => e.vr_mode,
+            Item::Vr6Dof => e.vr_6dof,
+            Item::VrControllers => e.vr_controllers,
+            Item::VrMotionSmoothing => e.vr_motion_smoothing,
+
             Item::WorldDownloader => e.world_downloader,
+            Item::WdlEntities => e.wdl_entities,
+            Item::WdlTileEntities => e.wdl_tile_entities,
             Item::Pregen => e.pregen,
             Item::CosmeticsHideFx => e.cosmetics_hide_fx,
             Item::CosmeticsSolo => e.cosmetics_solo,
@@ -946,6 +1019,45 @@ impl Item {
     pub fn value(self, e: &Extras) -> String {
         match self {
             Item::SortKey => crate::keybinds::display_name(&e.sort_key).plain(),
+            Item::VrRuntime => match e.vr_runtime {
+                1 => "SteamVR".to_string(),
+                2 => "Meta Quest Link".to_string(),
+                3 => "WMR".to_string(),
+                _ => "Auto (OpenXR)".to_string(),
+            },
+            Item::VrTurnMode => match e.vr_turn_mode {
+                1 => "Snap 30°".to_string(),
+                2 => "Smooth (90°/s)".to_string(),
+                _ => "Snap 45°".to_string(),
+            },
+            Item::VrMovement => if e.vr_movement { "Controller (Hand)".to_string() } else { "HMD (Head)".to_string() },
+            Item::VrWorldScale => match e.vr_world_scale {
+                1 => "80% (Compact)".to_string(),
+                2 => "120% (Large)".to_string(),
+                3 => "150% (Giant)".to_string(),
+                _ => "100% (Real)".to_string(),
+            },
+            Item::VrRenderMode => match e.vr_render_mode {
+                1 => "Side-by-Side 3D".to_string(),
+                2 => "Mono Mirror".to_string(),
+                _ => "Direct OpenXR HMD".to_string(),
+            },
+            Item::VrVignette => match e.vr_vignette {
+                1 => "Moderate".to_string(),
+                2 => "Strong".to_string(),
+                _ => "Off".to_string(),
+            },
+            Item::WdlGridMode => match e.wdl_grid_mode {
+                1 => "Missing Only (Red)".to_string(),
+                2 => "All Chunks".to_string(),
+                _ => "Off".to_string(),
+            },
+            Item::WdlRadius => match e.wdl_radius {
+                1 => "8 Chunks".to_string(),
+                2 => "16 Chunks".to_string(),
+                3 => "32 Chunks".to_string(),
+                _ => "Render Distance".to_string(),
+            },
             Item::Pvp(o) if o.switch(&e.pvp).is_none() => o.value(&e.pvp).unwrap_or_default(),
             Item::CosmeticsMine => match e.cosmetics_mine {
                 true => crate::lang::get_or("horizon.extras.cosmetics.shown", "Shown"),
@@ -992,8 +1104,64 @@ impl Item {
             Item::Splitscreen => e.splitscreen = !e.splitscreen,
             Item::WheelCyclesSettings => e.wheel_cycles_settings = !e.wheel_cycles_settings,
             Item::PackBrowser => e.pack_browser = !e.pack_browser,
-            Item::VrMode => e.vr_mode = !e.vr_mode,
-            Item::WorldDownloader => e.world_downloader = !e.world_downloader,
+            Item::VrMode => {
+                e.vr_mode = !e.vr_mode;
+                if let Ok(mut act) = horizont_vr::get().active.lock() { *act = e.vr_mode; }
+            }
+            Item::VrRuntime => e.vr_runtime = (e.vr_runtime + 1) % 4,
+            Item::Vr6Dof => e.vr_6dof = !e.vr_6dof,
+            Item::VrControllers => e.vr_controllers = !e.vr_controllers,
+            Item::VrTurnMode => {
+                e.vr_turn_mode = (e.vr_turn_mode + 1) % 3;
+                let angle = match e.vr_turn_mode { 1 => 30.0, 2 => 0.0, _ => 45.0 };
+                if let Ok(mut snap) = horizont_vr::get().snap_turn_angle.lock() { *snap = angle; }
+            }
+            Item::VrMovement => {
+                e.vr_movement = !e.vr_movement;
+                if let Ok(mut wand) = horizont_vr::get().wand_directed_movement.lock() { *wand = e.vr_movement; }
+            }
+            Item::VrWorldScale => {
+                e.vr_world_scale = (e.vr_world_scale + 1) % 4;
+                let scale = match e.vr_world_scale { 1 => 0.8, 2 => 1.2, 3 => 1.5, _ => 1.0 };
+                if let Ok(mut sc) = horizont_vr::get().world_scale.lock() { *sc = scale; }
+            }
+            Item::VrRenderMode => e.vr_render_mode = (e.vr_render_mode + 1) % 3,
+            Item::VrMotionSmoothing => e.vr_motion_smoothing = !e.vr_motion_smoothing,
+            Item::VrVignette => e.vr_vignette = (e.vr_vignette + 1) % 3,
+
+            Item::WorldDownloader => {
+                e.world_downloader = !e.world_downloader;
+                if let Ok(mut act) = horizont_wdl::get().active.lock() { *act = e.world_downloader; }
+            }
+            Item::WdlGridMode => {
+                e.wdl_grid_mode = (e.wdl_grid_mode + 1) % 3;
+                match e.wdl_grid_mode {
+                    0 => {
+                        if let Ok(mut hl) = horizont_wdl::get().highlight_enabled.lock() { *hl = false; }
+                    }
+                    1 => {
+                        if let Ok(mut hl) = horizont_wdl::get().highlight_enabled.lock() { *hl = true; }
+                        if let Ok(mut vm) = horizont_wdl::get().visual_mode.lock() { *vm = horizont_wdl::WdlVisualMode::OnlyMissing; }
+                    }
+                    _ => {
+                        if let Ok(mut hl) = horizont_wdl::get().highlight_enabled.lock() { *hl = true; }
+                        if let Ok(mut vm) = horizont_wdl::get().visual_mode.lock() { *vm = horizont_wdl::WdlVisualMode::AllChunks; }
+                    }
+                }
+            }
+            Item::WdlEntities => {
+                e.wdl_entities = !e.wdl_entities;
+                if let Ok(mut ent) = horizont_wdl::get().save_entities.lock() { *ent = e.wdl_entities; }
+            }
+            Item::WdlTileEntities => {
+                e.wdl_tile_entities = !e.wdl_tile_entities;
+                if let Ok(mut te) = horizont_wdl::get().save_tile_entities.lock() { *te = e.wdl_tile_entities; }
+            }
+            Item::WdlRadius => {
+                e.wdl_radius = (e.wdl_radius + 1) % 4;
+                let r = match e.wdl_radius { 1 => 8, 2 => 16, 3 => 32, _ => 16 };
+                if let Ok(mut rad) = horizont_wdl::get().save_radius.lock() { *rad = r; }
+            }
             Item::Pregen => e.pregen = !e.pregen,
             Item::CosmeticsMine => e.cosmetics_mine = !e.cosmetics_mine,
             Item::CosmeticsOthers => {

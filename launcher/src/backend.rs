@@ -10,9 +10,9 @@ use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 
 pub const REPO: &str = "rafw22/horizon-fork-horizont";
-pub const README_URL: &str = "https://github.com/horizon-rust/horizon/blob/main/launcher/README.md";
+pub const README_URL: &str = "https://github.com/rafw22/horizon-fork-horizont/blob/main/launcher/README.md";
 /// The players' page on connecting an AI agent (the website's docs/agents.md).
-pub const AGENT_DOCS_URL: &str = "https://playhorizon.dev/docs/agents";
+pub const AGENT_DOCS_URL: &str = "https://loonify.xyz/docs/agents";
 /// This launcher's version: the release workflow sets `HORIZON_LAUNCHER_VERSION` from the
 /// tag it builds (no version-bump commits); other builds say Cargo.toml's.
 pub const VERSION: &str = version_or(option_env!("HORIZON_LAUNCHER_VERSION"));
@@ -864,9 +864,9 @@ impl Default for Links {
     /// What the launcher uses until (or unless) it can read links.json.
     fn default() -> Self {
         Self {
-            discord: "https://discord.gg/playhorizon".into(),
-            sponsor: "https://github.com/sponsors/ludovic111".into(),
-            website: "https://playhorizon.dev".into(),
+            discord: "https://discord.gg/loonify".into(),
+            sponsor: "https://www.donationalerts.com/r/rafw".into(),
+            website: "https://loonify.xyz".into(),
             official_server: crate::server_list::OFFICIAL_ADDRESS.into(),
             official_server_previous: crate::server_list::OFFICIAL_PREVIOUS
                 .iter()
@@ -1034,6 +1034,13 @@ fn versions_dir() -> PathBuf {
 }
 
 pub fn version_dir(tag: &str) -> PathBuf {
+    if tag == "Horizont-Portable" {
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(parent) = exe.parent() {
+                return parent.to_path_buf();
+            }
+        }
+    }
     versions_dir().join(tag)
 }
 
@@ -1072,7 +1079,21 @@ fn program_mod_api_level(path: &Path) -> u32 {
 
 /// Installed versions, newest tag first.
 pub fn installed() -> Vec<String> {
-    installed_in(&versions_dir())
+    let mut tags = installed_in(&versions_dir());
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            let has_client = parent.join("horizont_client.exe").exists()
+                || parent.join("horizon-client.exe").exists();
+            let has_res = parent.join("resources").exists()
+                || parent.join(".local/horizon-client/26.3").exists();
+            if has_client && has_res {
+                if !tags.iter().any(|t| t == "Horizont-Portable") {
+                    tags.insert(0, "Horizont-Portable".to_string());
+                }
+            }
+        }
+    }
+    tags
 }
 
 fn installed_in(versions: &Path) -> Vec<String> {
@@ -1392,6 +1413,20 @@ fn game_version_at(dir: &Path) -> String {
 }
 
 pub fn resources(tag: &str) -> PathBuf {
+    if tag == "Horizont-Portable" {
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(parent) = exe.parent() {
+                let res = parent.join("resources");
+                if res.join(RESOURCES_MANIFEST).exists() {
+                    return res;
+                }
+                let local = parent.join(".local/horizon-client/26.3");
+                if local.join(RESOURCES_MANIFEST).exists() {
+                    return local;
+                }
+            }
+        }
+    }
     resources_at(&version_dir(tag))
 }
 
@@ -1402,6 +1437,9 @@ fn resources_at(dir: &Path) -> PathBuf {
 const RESOURCES_MANIFEST: &str = "horizon-resources.json";
 
 pub fn is_prepared(tag: &str) -> bool {
+    if tag == "Horizont-Portable" {
+        return true;
+    }
     resources(tag).join(RESOURCES_MANIFEST).exists()
 }
 
@@ -2524,6 +2562,13 @@ pub fn game_home() -> PathBuf {
     if let Some(home) = std::env::var_os("HORIZON_HOME").filter(|h| !h.is_empty()) {
         return PathBuf::from(home);
     }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            if parent.join("saves").exists() || parent.join("mods").exists() || parent.join(".local").exists() {
+                return parent.to_path_buf();
+            }
+        }
+    }
     // A location that does not open stands in as the default folders, as
     // `data_location::startup` makes it for the window: never a panic here.
     if let Ok(Some(roots)) = crate::data_location::configured_roots() {
@@ -2815,6 +2860,18 @@ pub fn client_command(tag: &str) -> Command {
 /// The game's program: on macOS the one inside the version's Horizon.app, so the Dock and Cmd+Tab
 /// show Horizon's name and icon (game_app.rs); the bare binary elsewhere, or if that fails.
 fn client_program(tag: &str) -> PathBuf {
+    if tag == "Horizont-Portable" {
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(parent) = exe.parent() {
+                for name in ["horizont_client.exe", "horizon-client.exe", "horizont_client", "horizon-client"] {
+                    let candidate = parent.join(name);
+                    if candidate.is_file() {
+                        return candidate;
+                    }
+                }
+            }
+        }
+    }
     let dir = version_dir(tag);
     #[cfg(target_os = "macos")]
     match crate::game_app::ensure(&dir) {
@@ -6112,9 +6169,9 @@ pub fn {f}("
     #[test]
     fn links_fall_back_to_the_built_in_ones() {
         let defaults = Links::default();
-        assert_eq!(defaults.discord, "https://discord.gg/playhorizon");
-        assert_eq!(defaults.sponsor, "https://github.com/sponsors/ludovic111");
-        assert_eq!(defaults.website, "https://playhorizon.dev");
+        assert_eq!(defaults.discord, "https://discord.gg/loonify");
+        assert_eq!(defaults.sponsor, "https://www.donationalerts.com/r/rafw");
+        assert_eq!(defaults.website, "https://loonify.xyz");
         // The file on main says the same thing as the defaults.
         assert_eq!(Links::parse(include_str!("../links.json")), defaults);
         // Unreadable or missing, offline included: the defaults.
