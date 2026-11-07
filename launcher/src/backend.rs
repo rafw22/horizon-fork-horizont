@@ -2836,9 +2836,15 @@ pub fn client_command(tag: &str) -> Command {
     #[cfg(windows)]
     crate::windows_runtime::mark(&mut cmd, &version_dir(tag));
     strip_launcher_render_env(&mut cmd);
+    let s_ram = Settings::load().allocated_ram_gb.unwrap_or(4);
+    let s_cores = Settings::load().allocated_cpu_cores.unwrap_or_else(|| std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).max(2) as u32);
     cmd.current_dir(&home)
         .env("HORIZON_HOME", &home)
+        .env("RAYON_NUM_THREADS", s_cores.to_string())
         .env_remove("HORIZON_ACCOUNT_SESSIONS")
+        .arg("--threads")
+        .arg(s_cores.to_string())
+        .arg(format!("-Xmx{}G", s_ram))
         .arg("--resources")
         .arg(resources(tag));
     // How the game asks for a renewed session (`account session`) while it runs.
@@ -4376,6 +4382,12 @@ pub struct Settings {
     /// default, or the release's own while `native_release` is on.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub native_profile: Option<crate::native_mods::Profile>,
+    /// Allocated RAM in GB for the game. Unset is 4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allocated_ram_gb: Option<u32>,
+    /// Allocated CPU cores for Rayon engine. Unset is all cores.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allocated_cpu_cores: Option<u32>,
     /// Combined fast/release compilation cache limit in GiB. Unset is 30; zero disables
     /// automatic cleanup. Installed native versions and player data are not this cache.
     #[serde(default, skip_serializing_if = "Option::is_none")]

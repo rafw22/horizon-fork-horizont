@@ -941,6 +941,10 @@ impl Game<'_> {
     }
     /// The debug renderers' gizmos for a frame (`DebugRenderer.emitGizmos`).
     pub(super) fn debug_gizmos(&self, alpha: f32, camera: [f64; 3]) -> Gizmos {
+        // Never render debug gizmos or chunk boundaries in title screen / panorama menu
+        if self.title.is_some() {
+            return Gizmos::default();
+        }
         let mut g = Gizmos::default();
         self.bounding_box_gizmos(camera, &mut g);
         self.debug_renderer_gizmos(&mut g);

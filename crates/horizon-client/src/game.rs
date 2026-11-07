@@ -12640,6 +12640,7 @@ impl Game<'_> {
             Action::Quit if self.options.split_guest => {}
             Action::Quit => event_loop.exit(),
             Action::Options => self.open_options(true),
+            Action::Mods => self.open_options_at(true, horizon_client::options_ui::Page::Mods),
             Action::Accessibility => {
                 self.open_options_at(true, horizon_client::options_ui::Page::Accessibility)
             }

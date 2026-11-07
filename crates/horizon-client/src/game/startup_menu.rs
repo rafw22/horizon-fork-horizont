@@ -611,7 +611,9 @@ impl Loading {
                 Event::OpenModrinthShaders => {
                     let dir = Game::shader_packs_dir();
                     let _ = std::fs::create_dir_all(&dir);
-                    let _ = open::that("https://modrinth.com/shaders");
+                    std::thread::spawn(|| {
+                        let _ = open::that("https://modrinth.com/shaders");
+                    });
                 }
                 Event::Credits => {
                     if let Some(gui) = &self.gui {
@@ -733,6 +735,7 @@ impl Loading {
         match action {
             Action::Quit => event_loop.exit(),
             Action::Options => self.open_menu_options(Page::Main),
+            Action::Mods => self.open_menu_options(Page::Mods),
             Action::Accessibility => self.open_menu_options(Page::Accessibility),
             Action::Language => self.open_menu_options(Page::Language),
             Action::Sounds => self.open_menu_options(Page::Sound),

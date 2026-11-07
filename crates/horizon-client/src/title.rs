@@ -368,6 +368,7 @@ pub enum Action {
     None,
     Quit,
     Options,
+    Mods,
     Accessibility,
     Language,
     /// AccessibilityOnboardingScreen's Music & Sounds button.
@@ -3587,7 +3588,7 @@ Would you like to enable the Narrator or visit the Accessibility Settings?",
                 Action::None
             }
             (Mode::Main, Some(8)) => {
-                Action::Options
+                Action::Mods
             }
             (Mode::Realms(screen), hit) => match screen.click(hit, x, y, (w, h)) {
                 crate::realms::Outcome::Back => {

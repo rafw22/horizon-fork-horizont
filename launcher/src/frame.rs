@@ -3,6 +3,7 @@
 //! pages in a glass tab strip, the player, Microsoft sign-in and Settings; and the menus they open.
 //! Dark appearance only for now (`docs/design-system.md`, "Glass").
 use super::*;
+use crate::servers_page::Field;
 use crate::glass_ui::{self as ui, white, Tone};
 use crate::instances_page::java_line;
 use gpui::{anchored, canvas, deferred, point};
@@ -577,7 +578,7 @@ impl Launcher {
                 .id("launcher-version")
                 .px(px(8.))
                 .pt(px(8.))
-                .child(trf("Launcher {version}", &[("version", backend::VERSION)]))
+                .child(format!("Horizont Beta {}", backend::VERSION))
                 .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
                     this.version_clicked();
                     cx.notify();
@@ -782,7 +783,7 @@ impl Launcher {
     }
 
     /// The menu under the player (`Switch player`): everyone who can play, then Manage accounts.
-    fn glass_account_menu(&self, cx: &mut Context<Self>) -> Option<impl IntoElement> {
+    fn glass_account_menu(&mut self, cx: &mut Context<Self>) -> Option<impl IntoElement> {
         if !self.account_menu {
             return None;
         }
@@ -864,6 +865,25 @@ impl Launcher {
                 &t,
             ));
         }
+        let inline_add = div()
+            .flex()
+            .items_center()
+            .gap(px(6.))
+            .mt(px(8.))
+            .p(px(4.))
+            .rounded(px(radius::CONTROL))
+            .bg(white(0.06))
+            .child(self.field(Field::OfflineName, tr("Никнейм"), 135., cx))
+            .child(
+                ui::quiet("quick-offline-add", tr("+ Добавить"), 28., &t)
+                    .px(px(8.))
+                    .text_size(px(12.))
+                    .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
+                        this.offline_name_enter();
+                        cx.notify();
+                    })),
+            );
+        menu = menu.child(inline_add);
         menu = menu.child(div().mt(px(4.)).child(
             ui::menu_row("account-manage", "user", tr("Manage accounts"), false, &t).on_click(
                 cx.listener(|this, _: &ClickEvent, _, cx| {

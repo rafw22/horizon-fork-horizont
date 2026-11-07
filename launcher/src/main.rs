@@ -2190,10 +2190,10 @@ fn mark(size: f32, t: &Theme) -> Div {
         .relative()
         .flex_none()
         .size(px(size))
-        .child(stem(4., 3., t.ink))
-        .child(stem(10., 3., t.ink))
-        .child(stem(4., 8., t.ink.opacity(0.36)))
-        .child(stem(10., 8., t.ink.opacity(0.36)))
+        .child(stem(4., 3., t.accent))
+        .child(stem(10., 3., t.accent))
+        .child(stem(4., 8., t.accent.opacity(0.4)))
+        .child(stem(10., 8., t.accent.opacity(0.4)))
         .child(
             div()
                 .absolute()
@@ -2201,7 +2201,7 @@ fn mark(size: f32, t: &Theme) -> Div {
                 .top(px(7. * u))
                 .w(px(14. * u))
                 .h(px(u))
-                .bg(t.accent),
+                .bg(gpui::white()),
         )
 }
 
@@ -3161,7 +3161,7 @@ impl Launcher {
                 .id("launcher-version")
                 .px(px(8.))
                 .pt(px(6.))
-                .child(trf("Launcher {version}", &[("version", backend::VERSION)]))
+                .child(format!("Horizont Beta {}", backend::VERSION))
                 .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
                     this.version_clicked();
                     cx.notify();
@@ -3180,7 +3180,7 @@ impl Launcher {
                 .child(
                     shell::text(theme::night::TITLE, shell::c(n.ink))
                         .font_family(theme::DISPLAY_FONT)
-                        .child("Horizon"),
+                        .child("Horizont"),
                 )
         });
         shell::sidebar_plate(&t)
@@ -4053,7 +4053,7 @@ impl Launcher {
                     .child(group("AI", "terminal"))
                     .child(self.no_ai_row(n + 6, cx))
                     .child(group("About", "info-box"))
-                    .child(index_row(n + 7, "Horizon", Some(plain(&horizon)), horizon_action, &t))
+                    .child(index_row(n + 7, "Horizont", Some(plain(&horizon)), horizon_action, &t))
                     .child(index_row(
                         n + 8,
                         tr("Launcher"),

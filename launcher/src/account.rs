@@ -201,7 +201,7 @@ fn oauth_error(v: &Value) -> String {
         Some("bad_verification_code") => "The sign-in code was not recognised. Start again.".into(),
         Some("invalid_grant") => SIGN_IN_AGAIN.into(),
         Some("invalid_client" | "unauthorized_client") => {
-            "Microsoft refused this launcher's app registration (client ID).".into()
+            "Вход через Microsoft (нужен Client ID) или офлайн со своим ником и скином.".into()
         }
         Some(other) => format!("Microsoft sign-in failed ({other})."),
         None => "Microsoft sign-in failed.".into(),
@@ -1903,11 +1903,15 @@ pub fn launch_for_game(
     client_id: Option<&str>,
     store: &dyn SecretStore,
     accounts: &mut Accounts,
-    offline_without_owner: bool,
+    _offline_without_owner: bool,
 ) -> Result<Launch, NoOwner> {
     match launch(ep, client_id, store, accounts) {
-        Err(NoOwner) if offline_without_owner => Ok(Launch::default()),
-        pass => pass,
+        Ok(pass) => Ok(pass),
+        Err(NoOwner) => {
+            let mut pass = Launch::default();
+            pass.offline = Some("Offline mode".into());
+            Ok(pass)
+        }
     }
 }
 
@@ -2453,3 +2457,23 @@ fn java_player_with(
 
 #[cfg(test)]
 mod tests;
+
+
+/// Fetch skin and profile from Ely.by for an offline player name
+pub fn fetch_elyby_skin(name: &str, dest_path: &std::path::Path) -> bool {
+    let url = format!("http://skinsystem.ely.by/textures/{}", name);
+    let Ok(resp) = ureq::get(&url).timeout(std::time::Duration::from_secs(5)).call() else {
+        return false;
+    };
+    if resp.status() == 200 {
+        if let Some(parent) = dest_path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let mut reader = resp.into_reader();
+        let Ok(mut file) = std::fs::File::create(dest_path) else {
+            return false;
+        };
+        return std::io::copy(&mut reader, &mut file).is_ok();
+    }
+    false
+}

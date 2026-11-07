@@ -483,8 +483,17 @@ impl PackScreen {
     /// `repositionElements`.
     fn reposition(&mut self, m: &Measure) {
         let (sx, sy) = self.header(m)[2];
-        self.search.x = sx;
-        self.search.y = sy;
+        if self.browsing_allowed {
+            let total_w = 160 + 6 + ADD_W;
+            let start_x = ((self.width - total_w) / 2).max(10);
+            self.search.x = start_x;
+            self.search.y = sy;
+            self.search.width = 160;
+        } else {
+            self.search.x = sx;
+            self.search.y = sy;
+            self.search.width = 200;
+        }
         let content = self.height - 49 - 33;
         let w = self.width;
         self.lists[0].update_size(200, content, w / 2 - 15 - 200, 49);
@@ -1365,9 +1374,10 @@ impl PackScreen {
     }
     /// The Add button, just right of the search box.
     fn add_button(&self, m: &Measure) -> (i32, i32) {
-        let (sx, sy) = self.header(m)[2];
-        // The search box is 15 tall: centre the taller button on it.
-        (sx + 204, sy - (ADD_H - 15) / 2)
+        let sy = self.header(m)[2].1;
+        let total_w = 160 + 6 + ADD_W;
+        let start_x = ((self.width - total_w) / 2).max(10);
+        (start_x + 166, sy - (ADD_H - 15) / 2)
     }
     /// The footer's two buttons, "Open Pack Folder" and "Done", over their
     /// labels; a label wider than its button scrolls with the clock.

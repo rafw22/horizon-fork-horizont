@@ -249,6 +249,90 @@ impl Launcher {
         )
     }
 
+
+    fn ram_allocation_row(&mut self, cx: &mut Context<Self>) -> Div {
+        let t = self.theme;
+        let current_ram = self.settings.allocated_ram_gb.unwrap_or(4);
+        let mut pills = div().flex().items_center().gap(px(6.));
+        for &ram in &[2, 4, 6, 8, 12, 16] {
+            let selected = current_ram == ram;
+            pills = pills.child(
+                ui::quiet(
+                    SharedString::from(format!("ram-pill-{ram}")),
+                    format!("{ram} ГБ"),
+                    28.,
+                    &t,
+                )
+                .when(selected, |d| d.bg(white(0.2)).font_weight(FontWeight::BOLD))
+                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                    this.settings.allocated_ram_gb = Some(ram);
+                    this.save_settings();
+                    cx.notify();
+                })),
+            );
+        }
+        ui::setting_row(
+            tr("Выделение оперативной памяти (RAM)"),
+            Some(
+                div()
+                    .child(tr("Объем памяти для игры, тяжелых миров и шейдеров (-Xmx)."))
+                    .into_any_element(),
+            ),
+            Some(pills.into_any_element()),
+        )
+    }
+
+    fn cpu_cores_row(&mut self, cx: &mut Context<Self>) -> Div {
+        let t = self.theme;
+        let max_sys = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).max(2) as u32;
+        let current_cores = self.settings.allocated_cpu_cores.unwrap_or(max_sys);
+        let mut pills = div().flex().items_center().gap(px(6.));
+        for &cores in &[2, 4, 6, 8, 12, 16] {
+            if cores > max_sys && cores > 8 {
+                continue;
+            }
+            let selected = current_cores == cores;
+            pills = pills.child(
+                ui::quiet(
+                    SharedString::from(format!("cores-pill-{cores}")),
+                    format!("{cores} ядер"),
+                    28.,
+                    &t,
+                )
+                .when(selected, |d| d.bg(white(0.2)).font_weight(FontWeight::BOLD))
+                .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                    this.settings.allocated_cpu_cores = Some(cores);
+                    this.save_settings();
+                    cx.notify();
+                })),
+            );
+        }
+        let all_selected = current_cores == max_sys;
+        pills = pills.child(
+            ui::quiet(
+                "cores-pill-all",
+                format!("Все ({max_sys})"),
+                28.,
+                &t,
+            )
+            .when(all_selected, |d| d.bg(white(0.2)).font_weight(FontWeight::BOLD))
+            .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                this.settings.allocated_cpu_cores = Some(max_sys);
+                this.save_settings();
+                cx.notify();
+            })),
+        );
+        ui::setting_row(
+            tr("Ядра процессора (Rayon Multi-Core)"),
+            Some(
+                div()
+                    .child(tr("Количество потоков для многопоточного параллельного тикинга сущностей."))
+                    .into_any_element(),
+            ),
+            Some(pills.into_any_element()),
+        )
+    }
+
     fn world_downloader_row(&mut self, cx: &mut Context<Self>) -> Div {
         let t = self.theme;
         let file = backend::game_home().join("horizon-extras.txt");
@@ -426,7 +510,7 @@ impl Launcher {
             .gap(px(8.))
             .child(about_tile(
                 self.horizon_mark(42.),
-                "Horizon".into(),
+                "Horizont".into(),
                 installed.unwrap_or_else(|| tr("Nightly").to_string()),
                 div()
                     .flex()
@@ -506,6 +590,8 @@ impl Launcher {
         let game = card()
             .child(self.game_architecture_row(n, cx))
             .child(self.game_args_row(n + 1, cx))
+            .child(self.ram_allocation_row(cx))
+            .child(self.cpu_cores_row(cx))
             .child(self.vr_mode_row(cx))
             .child(self.world_downloader_row(cx))
             .child(self.mods_auto_update_row(cx))

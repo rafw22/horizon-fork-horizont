@@ -419,7 +419,7 @@ impl Launcher {
             let (id, title, note) = match k {
                 NewKind::Horizon => (
                     "horizon",
-                    tr("Horizon"),
+                    tr("Horizont"),
                     tr("Minecraft rebuilt in Rust, with Horizon mods").to_string(),
                 ),
                 NewKind::Vanilla => (
@@ -860,7 +860,7 @@ impl Launcher {
         let selected = self.selected_instance().cloned();
         let from = selected
             .as_ref()
-            .map_or_else(|| "Horizon".into(), |i| i.name.clone());
+            .map_or_else(|| "Horizont".into(), |i| i.name.clone());
         let icon = match &selected {
             Some(i) => self.glass_instance_icon(i, 36.),
             None => self.horizon_mark(36.),
